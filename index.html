@@ -5,8 +5,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0b0d12; font-family: sans-serif; }
-        #map { width: 100vw; height: 100vh; background: #0b0d12; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0f111a; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; background: #0f111a; }
         
         .leaflet-popup-content-wrapper {
             background: #1c1e24;
@@ -69,29 +69,22 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Memory Palace:</b> Click anywhere to drop a pin & add body system notes.
+        <b>Skyrim Memory Palace:</b> Click anywhere to drop a pin & add notes.
     </div>
     <div id="map"></div>
 
     <script>
+        // Initialize map centered on Skyrim coordinates
         var map = L.map('map', {
-            crs: L.CRS.Simple,
-            minZoom: 1,
-            maxZoom: 5,
-            zoomSnap: 0.5
-        }).setView([-128, 128], 2);
+            minZoom: 2,
+            maxZoom: 7
+        }).setView([20, 0], 3);
 
-        var bounds = [[-256, 0], [0, 256]];
-
-        L.tileLayer('https://cdn.mapgenie.io/images/tiles/skyrim/skyrim/{z}/{x}/{y}.png', {
-            tileSize: 256,
-            minZoom: 1,
-            maxZoom: 5,
-            noWrap: true,
-            bounds: bounds
+        // Reliable Skyrim Tile Server compatible with HTTPS hosting
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Skyrim Map Interface',
+            noWrap: true
         }).addTo(map);
-
-        map.setMaxBounds(bounds);
 
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
