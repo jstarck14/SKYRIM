@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Skyrim Memory Palace (UESP Map Engine)</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000000; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; background: #000000; }
+        
+        .leaflet-popup-content-wrapper {
+            background: #1c1e24;
+            color: #f0f0f0;
+            border-radius: 8px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+            border: 1px solid #3d414d;
+            padding: 4px;
+        }
+        .leaflet-popup-tip { background: #1c1e24; }
+        .popup-card { width: 220px; }
+        .popup-card b { color: #4da6ff; font-size: 14px; }
+        .popup-card textarea {
+            width: 95%;
+            height: 80px;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            background: #2a2d36;
+            color: #ffffff;
+            border: 1px solid #3d414d;
+            border-radius: 4px;
+            padding: 6px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 13px;
+        }
+        .popup-card button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+        }
+        .popup-card button:hover { background: #0056b3; }
+        .saved-note {
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #d1d5db;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        #banner {
+            position: absolute;
+            top: 10px;
+            left: 50px;
+            z-index: 1000;
+            background: rgba(15, 17, 23, 0.92);
+            color: #ffffff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            border: 1px solid #2a2d36;
+            font-size: 13px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="banner">
+        <b>Skyrim Memory Palace:</b> UESP Map Tiles loaded. Click anywhere to add study notes.
+    </div>
+    <div id="map"></div>
+
+    <script>
+        // Set up simple CRS grid for UESP Skyrim Map coordinate system
+        var map = L.map('map', {
+            crs: L.CRS.Simple,
+            minZoom: 9,
+            maxZoom: 17,
+            zoomSnap: 0.5
+        }).setView([-128, 128], 11);
+
+        // Define map boundaries matching UESP tile zoom structure
+        var bounds = [[-256, 0], [0, 256]];
+
+        // Direct UESP Skyrim Tile Server integration
+        L.tileLayer('https://maps.uesp.net/srmap/zoom{z}/srmap-{x}-{y}-{z}.png', {
+            tileSize: 256,
+            minZoom: 9,
+            maxZoom: 17,
+            noWrap: true,
+            bounds: bounds,
+            errorTileUrl: 'https://maps.uesp.net/srmap/zoom11/srmap-0-0-11.png'
+        }).addTo(map);
+
+        map.setMaxBounds(bounds);
+
+        // Pin dropping logic
+        map.on('click', function(e) {
+            var marker = L.marker(e.latlng).addTo(map);
+            
+            var container = document.createElement('div');
+            container.className = 'popup-card';
+            
+            container.innerHTML = `
+                <b>Location Note</b>
+                <textarea placeholder="Type medical / body system notes..."></textarea>
+                <button class="save-btn">Save Note</button>
+            `;
+
+            var textarea = container.querySelector('textarea');
+            var saveBtn = container.querySelector('.save-btn');
+
+            saveBtn.onclick = function() {
+                var textVal = textarea.value.trim();
+                if (!textVal) return;
+                
+                container.innerHTML = `
+                    <b>Location Note</b>
+                    <div class="saved-note">${textVal.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+                    <button class="edit-btn" style="margin-top:10px; background:#3a3f4d;">Edit Note</button>
+                `;
+                
+                container.querySelector('.edit-btn').onclick = function() {
+                    container.innerHTML = `
+                        <b>Location Note</b>
+                        <textarea>${textVal}</textarea>
+                        <button class="save-btn">Save Note</button>
+                    `;
+                    container.querySelector('.save-btn').onclick = saveBtn.onclick;
+                };
+            };
+
+            marker.bindPopup(container).openPopup();
+        });
+    </script>
+</body>
+</html>
