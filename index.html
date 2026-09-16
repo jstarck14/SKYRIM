@@ -5,27 +5,10 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #080a0f; font-family: sans-serif; }
-        #map { width: 100vw; height: 100vh; background: #080a0f; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0f1219; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; background: #0f1219; }
         
-        .leaflet-container { background: #080a0f !important; }
-
-        /* Skyrim Parchment & Boundary Vector Styles */
-        .skyrim-hold {
-            fill: #1a1e29;
-            stroke: #4a5568;
-            stroke-width: 2;
-            transition: fill 0.2s;
-        }
-        .skyrim-hold:hover { fill: #2d3748; }
-        .skyrim-text {
-            fill: #e2e8f0;
-            font-size: 16px;
-            font-weight: bold;
-            font-family: sans-serif;
-            pointer-events: none;
-            text-anchor: middle;
-        }
+        .leaflet-container { background: #0f1219 !important; }
 
         .leaflet-popup-content-wrapper {
             background: #1c1e24;
@@ -89,7 +72,7 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Vector Palace:</b> Native SVG map embedded. Scroll to zoom, click to drop notes.
+        <b>Skyrim Map:</b> Scroll to zoom, click anywhere to drop study notes.
     </div>
     <div id="map"></div>
 
@@ -97,55 +80,23 @@
         var map = L.map('map', {
             crs: L.CRS.Simple,
             minZoom: -1,
-            maxZoom: 4,
+            maxZoom: 3,
             zoomSnap: 0.25,
             wheelPxPerZoomLevel: 90
         });
 
-        var bounds = [[0, 0], [1000, 1000]];
+        // Set map aspect ratio coordinate space
+        var bounds = [[0, 0], [1000, 1400]];
 
-        // Build native inline SVG element with full Hold geometry
-        var svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svgElement.setAttribute('xmlns', "http://www.w3.org/2000/svg");
-        svgElement.setAttribute('viewBox', "0 0 1000 1000");
-        svgElement.innerHTML = `
-            <rect width="1000" height="1000" fill="#080a0f"/>
-            
-            <!-- Skyrim Hold Geometries -->
-            <path class="skyrim-hold" d="M 120,180 Q 250,120 380,160 Q 420,280 280,340 Q 180,310 120,180 Z" />
-            <text x="250" y="240" class="skyrim-text">Haafingar (Solitude)</text>
+        // Public high-resolution vector SVG map URL bypasses fetch/CORS blocks
+        var highResSvgUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/87/Skyrim_map_holds.svg';
 
-            <path class="skyrim-hold" d="M 380,160 Q 560,140 540,360 Q 440,380 280,340 Z" />
-            <text x="440" y="250" class="skyrim-text">Hjaalmarch (Morthal)</text>
-
-            <path class="skyrim-hold" d="M 560,140 Q 750,130 720,350 Q 580,390 540,360 Z" />
-            <text x="640" y="240" class="skyrim-text">The Pale (Dawnstar)</text>
-
-            <path class="skyrim-hold" d="M 750,130 Q 940,160 890,400 Q 740,380 720,350 Z" />
-            <text x="825" y="260" class="skyrim-text">Winterhold</text>
-
-            <path class="skyrim-hold" d="M 280,340 Q 720,350 660,630 Q 260,600 280,340 Z" />
-            <text x="470" y="485" class="skyrim-text" style="fill:#63b3ed; font-size:22px;">Whiterun Hold</text>
-
-            <path class="skyrim-hold" d="M 40,320 Q 280,340 260,600 Q 90,720 40,320 Z" />
-            <text x="145" y="490" class="skyrim-text">The Reach (Markarth)</text>
-
-            <path class="skyrim-hold" d="M 260,600 Q 660,630 Q 610,880 140,840 Z" />
-            <text x="410" y="740" class="skyrim-text">Falkreath Hold</text>
-
-            <path class="skyrim-hold" d="M 720,350 Q 950,380 910,680 Q 660,630 720,350 Z" />
-            <text x="810" y="520" class="skyrim-text">Eastmarch (Windhelm)</text>
-
-            <path class="skyrim-hold" d="M 660,630 Q 910,680 860,910 Q 610,880 660,630 Z" />
-            <text x="760" y="770" class="skyrim-text">The Rift (Riften)</text>
-        `;
-
-        // Render vector layer inside Leaflet canvas
-        L.svgOverlay(svgElement, bounds).addTo(map);
+        // Render vector SVG directly as an image overlay
+        L.imageOverlay(highResSvgUrl, bounds).addTo(map);
         map.fitBounds(bounds);
         map.setMaxBounds(bounds);
 
-        // Click handler: Pins lock permanently to map coordinates
+        // Click handler: Pins lock to exact map coordinates
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
