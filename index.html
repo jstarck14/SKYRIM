@@ -7,7 +7,6 @@
     <style>
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         
-        /* Background UESP Map Frame */
         #uesp-frame {
             position: absolute;
             top: 0;
@@ -18,7 +17,6 @@
             z-index: 1;
         }
 
-        /* Overlay Pin Layer */
         #overlay-map {
             position: absolute;
             top: 0;
@@ -27,7 +25,6 @@
             height: 100vh;
             z-index: 2;
             background: transparent !important;
-            pointer-events: auto;
         }
 
         .leaflet-container { background: transparent !important; }
@@ -94,24 +91,35 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Memory Palace:</b> Live UESP Map embedded. Click anywhere to add study notes.
+        <b>Skyrim Memory Palace:</b> Zoom and pan the UESP map freely. Click to drop pins.
     </div>
 
-    <!-- Live UESP Map Frame -->
     <iframe id="uesp-frame" src="https://srmap.uesp.net/"></iframe>
-
-    <!-- Pin Note Overlay -->
     <div id="overlay-map"></div>
 
     <script>
-        // Transparent Leaflet overlay for handling memory palace pins
+        var overlayContainer = document.getElementById('overlay-map');
+
+        // Flat coordinate mapping linked to the fixed view
         var map = L.map('overlay-map', {
             crs: L.CRS.Simple,
-            minZoom: -2,
-            maxZoom: 3,
-            zoomControl: false
-        }).setView([0, 0], 0);
+            minZoom: 0,
+            maxZoom: 5,
+            zoomControl: true,
+            scrollWheelZoom: true,
+            dragging: true
+        }).setView([500, 500], 1);
 
+        // Synchronize scroll events between overlay and map frame
+        overlayContainer.addEventListener('wheel', function(e) {
+            var iframe = document.getElementById('uesp-frame');
+            iframe.contentWindow.postMessage({
+                type: 'scroll',
+                deltaY: e.deltaY
+            }, '*');
+        }, { passive: true });
+
+        // Pin dropping logic
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
