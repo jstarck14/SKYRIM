@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Skyrim Memory Palace (UESP Map Engine)</title>
+    <title>Skyrim Memory Palace</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000000; font-family: sans-serif; }
-        #map { width: 100vw; height: 100vh; background: #000000; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0b0c10; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; background: #0b0c10; }
         
         .leaflet-popup-content-wrapper {
             background: #1c1e24;
@@ -70,35 +70,46 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Memory Palace:</b> UESP Map Tiles loaded. Click anywhere to add study notes.
+        <b>Skyrim Memory Palace:</b> Official UESP Map. Click anywhere to add study notes.
     </div>
     <div id="map"></div>
 
     <script>
-        // Set up simple CRS grid for UESP Skyrim Map coordinate system
+        // Define UESP Skyrim Coordinate Reference System (CRS)
+        var UESP_CRS = L.extend({}, L.CRS.Simple, {
+            transformation: new L.Transformation(1 / 16, 0, -1 / 16, 0)
+        });
+
         var map = L.map('map', {
-            crs: L.CRS.Simple,
+            crs: UESP_CRS,
             minZoom: 9,
             maxZoom: 17,
             zoomSnap: 0.5
-        }).setView([-128, 128], 11);
+        }).setView([1000, 1000], 11);
 
-        // Define map boundaries matching UESP tile zoom structure
-        var bounds = [[-256, 0], [0, 256]];
+        // Custom TileLayer to calculate UESP tile filenames natively
+        L.TileLayer.UESP = L.TileLayer.extend({
+            getTileUrl: function(coords) {
+                var z = this._getZoomForUrl();
+                var x = coords.x;
+                var y = coords.y;
+                return 'https://maps.uesp.net/srmap/zoom' + z + '/srmap-' + x + '-' + y + '-' + z + '.png';
+            }
+        });
 
-        // Direct UESP Skyrim Tile Server integration
-        L.tileLayer('https://maps.uesp.net/srmap/zoom{z}/srmap-{x}-{y}-{z}.png', {
+        L.tileLayer.uesp = function(options) {
+            return new L.TileLayer.UESP('', options);
+        };
+
+        // Add UESP Tile Layer to Map
+        L.tileLayer.uesp({
             tileSize: 256,
             minZoom: 9,
             maxZoom: 17,
-            noWrap: true,
-            bounds: bounds,
-            errorTileUrl: 'https://maps.uesp.net/srmap/zoom11/srmap-0-0-11.png'
+            noWrap: true
         }).addTo(map);
 
-        map.setMaxBounds(bounds);
-
-        // Pin dropping logic
+        // Pin dropping & note saving logic
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
