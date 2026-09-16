@@ -5,29 +5,21 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0b0d12; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; background: #0b0d12; }
         
-        #uesp-frame {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            border: none;
-            z-index: 1;
-        }
+        .leaflet-container { background: #0b0d12 !important; }
 
-        #overlay-map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 2;
-            background: transparent !important;
+        /* Dark Medieval Parchment Vector Styling */
+        .skyrim-svg-path {
+            fill: #1a1d24;
+            stroke: #4a5568;
+            stroke-width: 2;
+            transition: fill 0.2s;
         }
-
-        .leaflet-container { background: transparent !important; }
+        .skyrim-svg-path:hover {
+            fill: #2d3748;
+        }
 
         .leaflet-popup-content-wrapper {
             background: #1c1e24;
@@ -91,35 +83,71 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Memory Palace:</b> Zoom and pan the UESP map freely. Click to drop pins.
+        <b>Skyrim Vector Palace:</b> Scroll/Pinch to zoom, click anywhere to drop pins.
     </div>
-
-    <iframe id="uesp-frame" src="https://srmap.uesp.net/"></iframe>
-    <div id="overlay-map"></div>
+    <div id="map"></div>
 
     <script>
-        var overlayContainer = document.getElementById('overlay-map');
-
-        // Flat coordinate mapping linked to the fixed view
-        var map = L.map('overlay-map', {
+        // Setup simple Leaflet coordinate space
+        var map = L.map('map', {
             crs: L.CRS.Simple,
-            minZoom: 0,
-            maxZoom: 5,
-            zoomControl: true,
-            scrollWheelZoom: true,
-            dragging: true
-        }).setView([500, 500], 1);
+            minZoom: -1,
+            maxZoom: 4,
+            zoomSnap: 0.25,
+            wheelPxPerZoomLevel: 90
+        });
 
-        // Synchronize scroll events between overlay and map frame
-        overlayContainer.addEventListener('wheel', function(e) {
-            var iframe = document.getElementById('uesp-frame');
-            iframe.contentWindow.postMessage({
-                type: 'scroll',
-                deltaY: e.deltaY
-            }, '*');
-        }, { passive: true });
+        var bounds = [[0, 0], [1000, 1000]];
 
-        // Pin dropping logic
+        // Build native inline SVG element representing Skyrim Holds
+        var svgElement = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svgElement.setAttribute('xmlns', "http://www.w3.org/2000/svg");
+        svgElement.setAttribute('viewBox', "0 0 1000 1000");
+        svgElement.innerHTML = `
+            <rect width="1000" height="1000" fill="#0b0d12"/>
+            <!-- Haafingar / Solitude -->
+            <path class="skyrim-svg-path" d="M 150,200 L 350,150 L 400,300 L 250,350 Z" />
+            <text x="240" y="240" fill="#a0aec0" font-size="22" font-weight="bold">Haafingar (Solitude)</text>
+
+            <!-- Hjaalmarch / Morthal -->
+            <path class="skyrim-svg-path" d="M 350,150 L 550,180 L 500,400 L 400,300 Z" />
+            <text x="430" y="260" fill="#a0aec0" font-size="22" font-weight="bold">Hjaalmarch</text>
+
+            <!-- The Pale / Dawnstar -->
+            <path class="skyrim-svg-path" d="M 550,180 L 750,150 L 700,380 L 500,400 Z" />
+            <text x="600" y="250" fill="#a0aec0" font-size="22" font-weight="bold">The Pale</text>
+
+            <!-- Winterhold -->
+            <path class="skyrim-svg-path" d="M 750,150 L 950,200 L 880,420 L 700,380 Z" />
+            <text x="780" y="270" fill="#a0aec0" font-size="22" font-weight="bold">Winterhold</text>
+
+            <!-- Whiterun Hold -->
+            <path class="skyrim-svg-path" d="M 300,400 L 700,380 L 650,650 L 250,600 Z" />
+            <text x="450" y="520" fill="#63b3ed" font-size="28" font-weight="bold">Whiterun Hold</text>
+
+            <!-- The Reach / Markarth -->
+            <path class="skyrim-svg-path" d="M 50,350 L 300,400 L 250,600 L 80,750 Z" />
+            <text x="130" y="500" fill="#a0aec0" font-size="22" font-weight="bold">The Reach</text>
+
+            <!-- Falkreath Hold -->
+            <path class="skyrim-svg-path" d="M 250,600 L 650,650 L 600,900 L 150,850 Z" />
+            <text x="360" y="750" fill="#a0aec0" font-size="22" font-weight="bold">Falkreath</text>
+
+            <!-- Eastmarch / Windhelm -->
+            <path class="skyrim-svg-path" d="M 700,380 L 950,420 L 900,700 L 650,650 Z" />
+            <text x="740" y="530" fill="#a0aec0" font-size="22" font-weight="bold">Eastmarch</text>
+
+            <!-- The Rift / Riften -->
+            <path class="skyrim-svg-path" d="M 650,650 L 900,700 L 850,920 L 600,900 Z" />
+            <text x="720" y="800" fill="#a0aec0" font-size="22" font-weight="bold">The Rift</text>
+        `;
+
+        // Render SVG Vector Overlay into Leaflet engine
+        L.svgOverlay(svgElement, bounds).addTo(map);
+        map.fitBounds(bounds);
+        map.setMaxBounds(bounds);
+
+        // Click handler: pins lock directly to map coordinates
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
