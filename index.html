@@ -5,27 +5,35 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #080a0f; font-family: sans-serif; }
-        #map { width: 100vw; height: 100vh; background: #080a0f; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0c0e14; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; background: #0c0e14; }
         
+        .leaflet-container { background: #0c0e14 !important; }
+        
+        /* Dark Skyrim Parchment Map Tiles */
+        .skyrim-tile {
+            filter: sepia(0.6) hue-rotate(190deg) contrast(1.2) brightness(0.6) invert(0.9);
+        }
+
         .leaflet-popup-content-wrapper {
-            background: #1c1e24;
-            color: #f0f0f0;
+            background: #181a20;
+            color: #e2e8f0;
             border-radius: 8px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+            border: 1px solid #2d3748;
             padding: 4px;
         }
-        .leaflet-popup-tip { background: #1c1e24; }
-        .popup-card { width: 220px; }
-        .popup-card b { color: #4da6ff; font-size: 14px; }
+        .leaflet-popup-tip { background: #181a20; }
+        .popup-card { width: 230px; }
+        .popup-card b { color: #63b3ed; font-size: 14px; }
         .popup-card textarea {
-            width: 95%;
-            height: 80px;
+            width: 93%;
+            height: 85px;
             margin-top: 8px;
             margin-bottom: 8px;
-            background: #2a2d36;
+            background: #2d3748;
             color: #ffffff;
-            border: 1px solid #3d414d;
+            border: 1px solid #4a5568;
             border-radius: 4px;
             padding: 6px;
             resize: vertical;
@@ -33,35 +41,35 @@
             font-size: 13px;
         }
         .popup-card button {
-            background: #007aff;
+            background: #3182ce;
             color: white;
             border: none;
-            padding: 6px 12px;
+            padding: 7px 12px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
         }
-        .popup-card button:hover { background: #0056b3; }
+        .popup-card button:hover { background: #2b6cb0; }
         .saved-note {
             margin-top: 6px;
             font-size: 13px;
             line-height: 1.4;
-            color: #d1d5db;
+            color: #cbd5e0;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
         
         #banner {
             position: absolute;
-            top: 10px;
+            top: 12px;
             left: 50px;
             z-index: 1000;
-            background: rgba(15, 17, 23, 0.9);
-            color: #ffffff;
+            background: rgba(15, 17, 23, 0.92);
+            color: #e2e8f0;
             padding: 8px 14px;
             border-radius: 6px;
-            border: 1px solid #2a2d36;
+            border: 1px solid #2d3748;
             font-size: 13px;
             pointer-events: none;
         }
@@ -69,33 +77,22 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Memory Palace:</b> Click anywhere to drop a pin & add notes.
+        <b>Skyrim Memory Palace:</b> Click anywhere to drop a pin & add medical notes.
     </div>
     <div id="map"></div>
 
     <script>
-        // Custom flat coordinate system for high-resolution Skyrim tiles
         var map = L.map('map', {
-            crs: L.CRS.Simple,
-            minZoom: 1,
-            maxZoom: 5,
-            zoomSnap: 0.5
-        }).setView([-128, 128], 2);
+            minZoom: 3,
+            maxZoom: 7
+        }).setView([20, 0], 3);
 
-        var bounds = [[-256, 0], [0, 256]];
-
-        // Direct Skyrim map tile server
-        L.tileLayer('https://raw.githubusercontent.com/skora/skyrim-map/master/tiles/{z}/{x}/{y}.png', {
-            tileSize: 256,
-            minZoom: 1,
-            maxZoom: 5,
-            noWrap: true,
-            bounds: bounds
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Skyrim Memory Palace',
+            className: 'skyrim-tile',
+            noWrap: true
         }).addTo(map);
 
-        map.setMaxBounds(bounds);
-
-        // Click event to drop interactive study pins
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
@@ -118,7 +115,7 @@
                 container.innerHTML = `
                     <b>Location Note</b>
                     <div class="saved-note">${textVal.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-                    <button class="edit-btn" style="margin-top:10px; background:#3a3f4d;">Edit Note</button>
+                    <button class="edit-btn" style="margin-top:10px; background:#4a5568;">Edit Note</button>
                 `;
                 
                 container.querySelector('.edit-btn').onclick = function() {
