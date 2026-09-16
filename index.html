@@ -86,30 +86,72 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Memory Palace:</b> Scroll to zoom, click anywhere to drop notes.
+        <b>Skyrim Memory Palace:</b> Scroll to zoom, click anywhere to drop study notes.
     </div>
     <div id="map"></div>
 
     <script>
-        // High-performance image vector layer with zero CORS restrictions
+        // Native flat coordinate space
         var map = L.map('map', {
             crs: L.CRS.Simple,
             minZoom: -1,
-            maxZoom: 4,
+            maxZoom: 3,
             zoomSnap: 0.25
         });
 
-        // Set bounds for high-res map canvas
-        var bounds = [[0, 0], [1000, 1400]];
+        var bounds = [[0, 0], [800, 1200]];
 
-        // Public high-res Skyrim map rendered directly via SVG vector overlay
-        var mapUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/87/Skyrim_map_holds.svg';
+        // Generate procedural canvas vector map
+        var canvas = document.createElement('canvas');
+        canvas.width = 1200;
+        canvas.height = 800;
+        var ctx = canvas.getContext('2d');
 
-        L.imageOverlay(mapUrl, bounds).addTo(map);
+        // Background / Sea
+        ctx.fillStyle = '#111622';
+        ctx.fillRect(0, 0, 1200, 800);
+
+        // Holds Definition Data
+        var holds = [
+            { name: "Haafingar (Solitude)", path: [[100,200], [250,150], [380,280], [220,350]], color: "#1e293b", label: [240, 240] },
+            { name: "Hjaalmarch (Mortal)", path: [[380,280], [520,200], [580,340], [420,400]], color: "#1e2430", label: [470, 300] },
+            { name: "The Pale (Dawnstar)", path: [[520,200], [750,180], [780,360], [580,340]], color: "#1c2836", label: [650, 270] },
+            { name: "Winterhold", path: [[750,180], [1050,150], [1020,380], [780,360]], color: "#192231", label: [900, 260] },
+            { name: "The Reach (Markarth)", path: [[80,380], [300,360], [320,680], [100,650]], color: "#17202a", label: [200, 520] },
+            { name: "Whiterun Hold", path: [[300,360], [700,350], [720,580], [320,600]], color: "#1c2d42", label: [510, 470] },
+            { name: "Eastmarch (Windhelm)", path: [[780,360], [1100,380], [1080,680], [720,580]], color: "#182635", label: [920, 500] },
+            { name: "Falkreath Hold", path: [[320,600], [650,580], [600,750], [300,720]], color: "#1b252e", label: [460, 670] },
+            { name: "The Rift (Riften)", path: [[650,580], [1080,680], [1000,780], [600,750]], color: "#212b33", label: [820, 710] }
+        ];
+
+        // Draw Holds
+        holds.forEach(function(hold) {
+            ctx.beginPath();
+            ctx.moveTo(hold.path[0][0], hold.path[0][1]);
+            for(var i = 1; i < hold.path.length; i++) {
+                ctx.lineTo(hold.path[i][0], hold.path[i][1]);
+            }
+            ctx.closePath();
+            ctx.fillStyle = hold.color;
+            ctx.fill();
+            ctx.strokeStyle = '#3b82f6';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Render Region Labels
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(hold.name, hold.label[0], hold.label[1]);
+        });
+
+        // Overlay generated canvas image into Leaflet
+        var dataUrl = canvas.toDataURL();
+        L.imageOverlay(dataUrl, bounds).addTo(map);
         map.fitBounds(bounds);
         map.setMaxBounds(bounds);
 
-        // Click handler: Persistent note markers
+        // Click Handler: Pin placement
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
