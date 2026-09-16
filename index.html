@@ -5,35 +5,52 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0c0e14; font-family: sans-serif; }
-        #map { width: 100vw; height: 100vh; background: #0c0e14; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
         
-        .leaflet-container { background: #0c0e14 !important; }
-        
-        /* Dark Skyrim Parchment Map Tiles */
-        .skyrim-tile {
-            filter: sepia(0.6) hue-rotate(190deg) contrast(1.2) brightness(0.6) invert(0.9);
+        /* Background UESP Map Frame */
+        #uesp-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            border: none;
+            z-index: 1;
         }
 
+        /* Overlay Pin Layer */
+        #overlay-map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 2;
+            background: transparent !important;
+            pointer-events: auto;
+        }
+
+        .leaflet-container { background: transparent !important; }
+
         .leaflet-popup-content-wrapper {
-            background: #181a20;
-            color: #e2e8f0;
+            background: #1c1e24;
+            color: #f0f0f0;
             border-radius: 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.8);
-            border: 1px solid #2d3748;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+            border: 1px solid #3d414d;
             padding: 4px;
         }
-        .leaflet-popup-tip { background: #181a20; }
-        .popup-card { width: 230px; }
-        .popup-card b { color: #63b3ed; font-size: 14px; }
+        .leaflet-popup-tip { background: #1c1e24; }
+        .popup-card { width: 220px; }
+        .popup-card b { color: #4da6ff; font-size: 14px; }
         .popup-card textarea {
-            width: 93%;
-            height: 85px;
+            width: 95%;
+            height: 80px;
             margin-top: 8px;
             margin-bottom: 8px;
-            background: #2d3748;
+            background: #2a2d36;
             color: #ffffff;
-            border: 1px solid #4a5568;
+            border: 1px solid #3d414d;
             border-radius: 4px;
             padding: 6px;
             resize: vertical;
@@ -41,35 +58,35 @@
             font-size: 13px;
         }
         .popup-card button {
-            background: #3182ce;
+            background: #007aff;
             color: white;
             border: none;
-            padding: 7px 12px;
+            padding: 6px 12px;
             border-radius: 4px;
             cursor: pointer;
             font-weight: bold;
             width: 100%;
         }
-        .popup-card button:hover { background: #2b6cb0; }
+        .popup-card button:hover { background: #0056b3; }
         .saved-note {
             margin-top: 6px;
             font-size: 13px;
             line-height: 1.4;
-            color: #cbd5e0;
+            color: #d1d5db;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
         
         #banner {
             position: absolute;
-            top: 12px;
+            top: 10px;
             left: 50px;
             z-index: 1000;
             background: rgba(15, 17, 23, 0.92);
-            color: #e2e8f0;
+            color: #ffffff;
             padding: 8px 14px;
             border-radius: 6px;
-            border: 1px solid #2d3748;
+            border: 1px solid #2a2d36;
             font-size: 13px;
             pointer-events: none;
         }
@@ -77,21 +94,23 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Memory Palace:</b> Click anywhere to drop a pin & add medical notes.
+        <b>Skyrim Memory Palace:</b> Live UESP Map embedded. Click anywhere to add study notes.
     </div>
-    <div id="map"></div>
+
+    <!-- Live UESP Map Frame -->
+    <iframe id="uesp-frame" src="https://srmap.uesp.net/"></iframe>
+
+    <!-- Pin Note Overlay -->
+    <div id="overlay-map"></div>
 
     <script>
-        var map = L.map('map', {
-            minZoom: 3,
-            maxZoom: 7
-        }).setView([20, 0], 3);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: 'Skyrim Memory Palace',
-            className: 'skyrim-tile',
-            noWrap: true
-        }).addTo(map);
+        // Transparent Leaflet overlay for handling memory palace pins
+        var map = L.map('overlay-map', {
+            crs: L.CRS.Simple,
+            minZoom: -2,
+            maxZoom: 3,
+            zoomControl: false
+        }).setView([0, 0], 0);
 
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
@@ -115,7 +134,7 @@
                 container.innerHTML = `
                     <b>Location Note</b>
                     <div class="saved-note">${textVal.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
-                    <button class="edit-btn" style="margin-top:10px; background:#4a5568;">Edit Note</button>
+                    <button class="edit-btn" style="margin-top:10px; background:#3a3f4d;">Edit Note</button>
                 `;
                 
                 container.querySelector('.edit-btn').onclick = function() {
