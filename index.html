@@ -8,8 +8,6 @@
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0f1219; font-family: sans-serif; }
         #map { width: 100vw; height: 100vh; background: #0f1219; }
         
-        .leaflet-container { background: #0f1219 !important; }
-
         .leaflet-popup-content-wrapper {
             background: #1c1e24;
             color: #f0f0f0;
@@ -72,31 +70,27 @@
 </head>
 <body>
     <div id="banner">
-        <b>Skyrim Map:</b> Scroll to zoom, click anywhere to drop study notes.
+        <b>Skyrim Memory Palace:</b> UESP Tiles Active. Scroll to zoom, click to drop notes.
     </div>
     <div id="map"></div>
 
     <script>
+        // Initialize Leaflet map targeting UESP coordinate space
         var map = L.map('map', {
-            crs: L.CRS.Simple,
-            minZoom: -1,
-            maxZoom: 3,
-            zoomSnap: 0.25,
-            wheelPxPerZoomLevel: 90
+            center: [0, 0],
+            zoom: 11,
+            minZoom: 9,
+            maxZoom: 17
         });
 
-        // Set map aspect ratio coordinate space
-        var bounds = [[0, 0], [1000, 1400]];
+        // Pulls UESP tiles via proxy to bypass GitHub Pages domain blocking
+        L.tileLayer('https://corsproxy.io/?' + encodeURIComponent('https://srmap.uesp.net/v1/skyrim/{z}/{x}/{y}.png'), {
+            attribution: 'Map data &copy; UESP.net',
+            maxZoom: 17,
+            tileSize: 256
+        }).addTo(map);
 
-        // Public high-resolution vector SVG map URL bypasses fetch/CORS blocks
-        var highResSvgUrl = 'https://upload.wikimedia.org/wikipedia/commons/8/87/Skyrim_map_holds.svg';
-
-        // Render vector SVG directly as an image overlay
-        L.imageOverlay(highResSvgUrl, bounds).addTo(map);
-        map.fitBounds(bounds);
-        map.setMaxBounds(bounds);
-
-        // Click handler: Pins lock to exact map coordinates
+        // Click handler: Pins attach to geographic coordinates
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
