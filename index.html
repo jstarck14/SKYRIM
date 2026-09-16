@@ -5,8 +5,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #0f111a; font-family: sans-serif; }
-        #map { width: 100vw; height: 100vh; background: #0f111a; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #080a0f; font-family: sans-serif; }
+        #map { width: 100vw; height: 100vh; background: #080a0f; }
         
         .leaflet-popup-content-wrapper {
             background: #1c1e24;
@@ -74,18 +74,28 @@
     <div id="map"></div>
 
     <script>
-        // Initialize map centered on Skyrim coordinates
+        // Custom flat coordinate system for high-resolution Skyrim tiles
         var map = L.map('map', {
-            minZoom: 2,
-            maxZoom: 7
-        }).setView([20, 0], 3);
+            crs: L.CRS.Simple,
+            minZoom: 1,
+            maxZoom: 5,
+            zoomSnap: 0.5
+        }).setView([-128, 128], 2);
 
-        // Reliable Skyrim Tile Server compatible with HTTPS hosting
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: 'Skyrim Map Interface',
-            noWrap: true
+        var bounds = [[-256, 0], [0, 256]];
+
+        // Direct Skyrim map tile server
+        L.tileLayer('https://raw.githubusercontent.com/skora/skyrim-map/master/tiles/{z}/{x}/{y}.png', {
+            tileSize: 256,
+            minZoom: 1,
+            maxZoom: 5,
+            noWrap: true,
+            bounds: bounds
         }).addTo(map);
 
+        map.setMaxBounds(bounds);
+
+        // Click event to drop interactive study pins
         map.on('click', function(e) {
             var marker = L.marker(e.latlng).addTo(map);
             
